@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>films — pdvsn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pink: #e85a7a;
+      --bg: #101010;
+      --text: #ddd8d2;
+      --muted: #777;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Film grain */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.038;
+      pointer-events: none;
+      z-index: 9000;
+    }
+
+    /* ── Nav ─────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.75rem 3rem;
+      z-index: 500;
+      background: linear-gradient(to bottom, rgba(16,16,16,0.85) 0%, transparent 100%);
+    }
+
+    nav a {
+      color: var(--pink);
+      text-decoration: none;
+      font-family: 'Jost', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: lowercase;
+      font-size: 0.78rem;
+      transition: opacity 0.2s;
+    }
+
+    nav a:hover { opacity: 0.6; }
+
+    /* ── Hero ────────────────────────────── */
+    .hero {
+      position: relative;
+      height: 100vh;
+      min-height: 540px;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .hero-bg { position: absolute; inset: 0; }
+
+    .hero-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.4s ease;
+      animation: heroZoom 8s ease forwards;
+    }
+
+    .hero-slide.visible { opacity: 1; }
+
+    @keyframes heroZoom {
+      from { transform: scale(1.06); }
+      to   { transform: scale(1.0); }
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top,  rgba(16,16,16,1.0) 0%, rgba(16,16,16,0.5) 45%, rgba(16,16,16,0.15) 100%),
+        linear-gradient(to right, rgba(16,16,16,0.55) 0%, transparent 65%);
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 0 3rem 4.5rem;
+      max-width: 780px;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.5em;
+      text-transform: lowercase;
+      color: var(--pink);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.3s ease forwards;
+    }
+
+    .hero-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(3rem, 8vw, 7rem);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 1.6rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.5s ease forwards;
+    }
+
+    .hero-headline em {
+      font-style: italic;
+      color: #fff;
+    }
+
+    .hero-sub {
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      color: rgba(221,216,210,0.6);
+      margin-bottom: 2.25rem;
+      line-height: 1.7;
+      max-width: 42ch;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.7s ease forwards;
+    }
+
+    .hero-cta {
+      display: inline-block;
+      color: var(--pink);
+      border: 1px solid rgba(232, 90, 122, 0.5);
+      padding: 0.7rem 2rem;
+      font-family: 'Jost', sans-serif;
+      font-weight: 400;
+      font-size: 0.73rem;
+      letter-spacing: 0.18em;
+      text-transform: lowercase;
+      text-decoration: none;
+      transition: all 0.25s;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.9s ease forwards;
+    }
+
+    .hero-cta:hover {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: #fff;
+    }
+
+    /* Scroll nudge */
+    .hero-scroll {
+      position: absolute;
+      bottom: 2.5rem;
+      right: 3rem;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      opacity: 0;
+      animation: fadeIn 1s 1.4s ease forwards;
+    }
+
+    .hero-scroll span {
+      font-size: 0.58rem;
+      letter-spacing: 0.4em;
+      text-transform: lowercase;
+      color: var(--muted);
+      writing-mode: vertical-rl;
+    }
+
+    .hero-scroll-line {
+      width: 1px;
+      height: 3rem;
+      background: linear-gradient(to bottom, var(--pink), transparent);
+      animation: scrollPulse 2.2s 1.8s ease-in-out infinite;
+    }
+
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.35; transform: scaleY(1); }
+      50%       { opacity: 1;   transform: scaleY(1.1); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* ── Films section ───────────────────── */
+    .films-section {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 6rem 3rem 9rem;
+    }
+
+    .section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.45em;
+      text-transform: lowercase;
+      color: var(--pink);
+      margin-bottom: 4rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #1e1e1e;
+    }
+
+    /* ── Film entry ──────────────────────── */
+    .film {
+      opacity: 0;
+      transform: translateY(38px);
+      animation: fadeUp 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    .film-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .film-number {
+      font-size: 0.62rem;
+      letter-spacing: 0.38em;
+      color: var(--pink);
+      font-weight: 400;
+      flex-shrink: 0;
+    }
+
+    .film-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── Gallery ─────────────────────────── */
+    .gallery {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #1a1a1a;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .gallery:active { cursor: grabbing; }
+
+    .gallery-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .gallery-slide { min-width: 100%; height: 100%; }
+
+    .gallery-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 7s ease;
+    }
+
+    .gallery-slide.active img { transform: scale(1.04); }
+
+    .gallery-nav {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      pointer-events: none;
+    }
+
+    .gallery-btn {
+      width: 2.25rem;
+      height: 2.25rem;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(232,90,122,0.2);
+      color: var(--pink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: all;
+      font-size: 0.85rem;
+      transition: all 0.22s;
+    }
+
+    .gallery-btn:hover {
+      background: rgba(232,90,122,0.18);
+      border-color: var(--pink);
+    }
+
+    .gallery-dots {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    .gallery-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .gallery-dot.active {
+      background: var(--pink);
+      width: 18px;
+      border-radius: 2.5px;
+    }
+
+    /* ── Film info ───────────────────────── */
+    .film-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 3rem;
+      margin-top: 1.3rem;
+    }
+
+    .film-description {
+      font-size: 0.875rem;
+      line-height: 1.88;
+      color: var(--muted);
+      max-width: 60ch;
+    }
+
+    .watch-btn {
+      flex-shrink: 0;
+      background: transparent;
+      color: var(--pink);
+      border: 1px solid rgba(232,90,122,0.55);
+      padding: 0.65rem 2rem;
+      font-family: 'Jost', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      font-size: 0.73rem;
+      text-transform: lowercase;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.25s;
+      margin-top: 0.2rem;
+    }
+
+    .watch-btn:hover {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: #fff;
+    }
+
+    /* ── Separator ───────────────────────── */
+    .separator {
+      display: flex;
+      align-items: center;
+      margin: 6rem 0;
+    }
+
+    .separator::before, .separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #1e1e1e;
+    }
+
+    .separator-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--pink);
+      opacity: 0.4;
+      margin: 0 1rem;
+    }
+
+    /* ── Mobile ──────────────────────────── */
+    @media (max-width: 680px) {
+      nav { padding: 1.25rem 1.5rem; }
+      .hero-content { padding: 0 1.5rem 3.5rem; }
+      .hero-scroll { right: 1.5rem; }
+      .films-section { padding: 4rem 1.5rem 6rem; }
+      .film-info { flex-direction: column; gap: 1.25rem; }
+      .watch-btn { width: 100%; text-align: center; }
+      .separator { margin: 4rem 0; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="https://pdvsn.com">home</a>
+</nav>
+
+<!-- ── Hero ──────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg" id="hero-bg"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">pdvsn</p>
+    <h1 class="hero-headline">Stories worth<br><em>putting on screen.</em></h1>
+    <p class="hero-sub">Short films, made properly. If you've got an idea, let's make something.</p>
+
+    <!-- ============================================================
+         UPDATE THIS: replace the href with your Instagram (or other) URL
+    ============================================================ -->
+    <a class="hero-cta" href="https://instagram.com/pdvsn99" target="_blank" rel="noopener">
+      find me on instagram
+    </a>
+  </div>
+
+  <div class="hero-scroll">
+    <span>films</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+<!-- ── Films ─────────────────────────────────────────────────── -->
+<div class="films-section">
+  <div class="section-label">films</div>
+  <div id="container"></div>
+</div>
+
+<script>
+/* =================================================================
+   YOUR FILMS — edit this section to add or update films
+   -----------------------------------------------------------------
+   To add a new film, copy one block (from { to the closing },)
+   and paste it after the last one, before the final ];
+
+   youtubeId  →  the part after ?v= in the YouTube URL
+                 e.g. https://youtu.be/dQw4w9WgXcQ  →  'dQw4w9WgXcQ'
+
+   stills     →  paths to your images, relative to this HTML file
+                 keep them in an 'images/' folder next to index.html
+================================================================= */
+
+const FILMS = [
+  {
+    title: '\u201cSloansy\u201d',
+    description: 'On a Scottish council estate in 1999, Jeanie struggles to raise her infant son alone. When concerned neighbours alert the authorities, she faces the grim reality of losing everything. Just as hope fades, a mysterious man steps in with an offer\u2014one that could save her or lead her down a dangerous path.',
+    youtubeId: '3D2MKY4uDA4',
+    stills: [
+      'images/sloansy-1.jpg',
+      'images/sloansy-2.jpg',
+      'images/sloansy-3.jpg',
+    ]
+  },
+  {
+    title: 'Swimming With You',
+    description: 'After a hookup goes wrong, Rhys and Lucas find themselves locked out of their car, stuck in awkward silence. As they talk, frustration turns to unexpected connection. When a sharp-witted recovery worker arrives, she sizes them up with a knowing smile\u2014turning their night into something neither of them expected.',
+    youtubeId: '1Ty29yOT98E',
+    stills: [
+      'images/swimming-1.jpg',
+      'images/swimming-2.jpg',
+      'images/swimming-3.jpg',
+    ]
+  },
+  // ← paste new films above this line
+];
+
+/* =================================================================
+   RENDERING — no need to touch anything below this line
+================================================================= */
+
+// ── Hero slideshow ────────────────────────────────────────────────
+const allStills = FILMS.flatMap(f => f.stills).sort(() => Math.random() - 0.5);
+const heroBg    = document.getElementById('hero-bg');
+let heroIdx = 0;
+let heroSlides  = [];
+
+allStills.forEach((src, i) => {
+  const div = document.createElement('div');
+  div.className = 'hero-slide' + (i === 0 ? ' visible' : '');
+  div.style.backgroundImage = `url('${src}')`;
+  heroBg.appendChild(div);
+  heroSlides.push(div);
+});
+
+if (heroSlides.length > 1) {
+  setInterval(() => {
+    heroSlides[heroIdx].classList.remove('visible');
+    heroIdx = (heroIdx + 1) % heroSlides.length;
+    const next = heroSlides[heroIdx];
+    next.style.animation = 'none';
+    next.offsetHeight; // force reflow to restart animation
+    next.style.animation = '';
+    next.classList.add('visible');
+  }, 5500);
+}
+
+// ── Film entries ──────────────────────────────────────────────────
+const container = document.getElementById('container');
+
+FILMS.forEach((film, fi) => {
+  if (fi > 0) {
+    const sep = document.createElement('div');
+    sep.className = 'separator';
+    sep.innerHTML = '<div class="separator-dot"></div>';
+    container.appendChild(sep);
+  }
+
+  const section = document.createElement('section');
+  section.className = 'film';
+  section.style.animationDelay = `${fi * 0.18}s`;
+
+  const num   = String(fi + 1).padStart(2, '0');
+  const multi = film.stills.length > 1;
+
+  section.innerHTML = `
+    <div class="film-header">
+      <span class="film-number">${num}</span>
+      <h2 class="film-title">${film.title}</h2>
+    </div>
+
+    <div class="gallery" data-film="${fi}">
+      <div class="gallery-track" id="track-${fi}">
+        ${film.stills.map((src, si) => `
+          <div class="gallery-slide${si === 0 ? ' active' : ''}">
+            <img src="${src}" alt="${film.title} \u2014 still ${si + 1}" loading="lazy" draggable="false">
+          </div>`).join('')}
+      </div>
+      ${multi ? `
+        <div class="gallery-nav">
+          <button class="gallery-btn" data-dir="-1" data-film="${fi}" aria-label="Previous">&#8592;</button>
+          <button class="gallery-btn" data-dir="1"  data-film="${fi}" aria-label="Next">&#8594;</button>
+        </div>
+        <div class="gallery-dots" id="dots-${fi}">
+          ${film.stills.map((_, si) => `
+            <button class="gallery-dot${si === 0 ? ' active' : ''}"
+                    data-film="${fi}" data-slide="${si}"
+                    aria-label="Slide ${si + 1}"></button>`).join('')}
+        </div>` : ''}
+    </div>
+
+    <div class="film-info">
+      <p class="film-description">${film.description}</p>
+      <a class="watch-btn"
+         href="https://www.youtube.com/watch?v=${film.youtubeId}"
+         target="_blank" rel="noopener">watch</a>
+    </div>
+  `;
+
+  container.appendChild(section);
+});
+
+// ── Gallery navigation ────────────────────────────────────────────
+const state = FILMS.map(() => 0);
+
+function goTo(fi, si) {
+  const count = FILMS[fi].stills.length;
+  si = ((si % count) + count) % count;
+  state[fi] = si;
+  document.getElementById(`track-${fi}`).style.transform = `translateX(-${si * 100}%)`;
+  document.querySelectorAll(`#track-${fi} .gallery-slide`).forEach((el, i) => el.classList.toggle('active', i === si));
+  document.querySelectorAll(`#dots-${fi} .gallery-dot`).forEach((dot, i) => dot.classList.toggle('active', i === si));
+}
+
+// Touch swipe
+document.querySelectorAll('.gallery').forEach(gallery => {
+  let startX = null;
+  const fi = +gallery.dataset.film;
+  gallery.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  gallery.addEventListener('touchend', e => {
+    if (startX === null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) goTo(fi, state[fi] + (dx < 0 ? 1 : -1));
+    startX = null;
+  });
+});
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.gallery-btn');
+  if (btn) { goTo(+btn.dataset.film, state[+btn.dataset.film] + +btn.dataset.dir); return; }
+
+  const dot = e.target.closest('.gallery-dot');
+  if (dot) { goTo(+dot.dataset.film, +dot.dataset.slide); }
+});
+</script>
+</body>
+</html>
